@@ -20,22 +20,35 @@ zcg.items_in_group = function(group)
 	return items
 end
 
+local table_copy = function(table)
+	out = {}
+	for k,v in pairs(table) do
+		out[k] = v
+	end
+	return out
+end
+
 zcg.add_craft = function(input, output, groups)
 	if not groups then groups = {} end
-	c = {}
+	local c = {}
 	c.width = input.width
 	c.type = input.type
 	c.items = input.items
+	if c.items == nil then return end
 	for i, item in pairs(c.items) do
 		if item:sub(0,6) == "group:" then
-			if groups[item:sub(7)] then
-				c.items[i] = groups[item:sub(7)]
+			local groupname = item:sub(7)
+			if groups[groupname] ~= nil then
+				c.items[i] = groups[groupname]
 			else
-				for _, gi in ipairs(zcg.items_in_group(item:sub(7))) do
-					if groups[item:sub(7)] ~= gi then
-						groups[item:sub(7)] = gi
-						zcg.add_craft(c, output, groups)
-					end
+				for _, gi in ipairs(zcg.items_in_group(groupname)) do
+					local g2 = groups
+					g2[groupname] = gi
+					zcg.add_craft({
+						width = c.width,
+						type = c.type,
+						items = table_copy(c.items)
+					}, output, g2) -- it is needed to copy the table, else groups won't work right
 				end
 				return
 			end
