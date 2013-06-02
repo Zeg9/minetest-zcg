@@ -6,6 +6,7 @@ zcg = {}
 
 zcg.users = {}
 zcg.crafts = {}
+zcg.itemlist = {}
 
 zcg.items_in_group = function(group)
 	local items = {}
@@ -54,7 +55,11 @@ zcg.load_crafts = function(name)
 			end
 		end
 	end
-	if zcg.crafts[name] == nil or #zcg.crafts[name] == 0 then zcg.crafts[name] = nil end
+	if zcg.crafts[name] == nil or #zcg.crafts[name] == 0 then
+		zcg.crafts[name] = nil
+	else
+		table.insert(zcg.itemlist,name)
+	end
 end
 
 zcg.need_load_all = true
@@ -68,6 +73,7 @@ zcg.load_all = function()
 		end
 		i = i+1
 	end
+	table.sort(zcg.itemlist)
 	zcg.need_load_all = false
 	print("All crafts loaded !")
 end
@@ -81,7 +87,6 @@ zcg.formspec = function(pn)
 	.. "button[0,0;2,.5;main;Back]"
 	-- Show craft recipe
 	if current_item ~= "" then
-		if zcg.crafts[current_item] == nil then zcg.load_crafts(current_item) end
 		if zcg.crafts[current_item] then
 			if alt > #zcg.crafts[current_item] then
 				alt = #zcg.crafts[current_item]
@@ -92,7 +97,6 @@ zcg.formspec = function(pn)
 			if alt < #zcg.crafts[current_item] then
 				formspec = formspec .. "button[7,2;1,1;zcg_alt:"..(alt+1)..";v]"
 			end
-			zcg.load_crafts(name)
 			local c = zcg.crafts[current_item][alt]
 			if c then
 				for i, item in pairs(c.items) do
@@ -108,7 +112,7 @@ zcg.formspec = function(pn)
 	local npp = 8*3 -- nodes per page
 	local i = 0 -- for positionning buttons
 	local s = 0 -- for skipping pages
-	for name, _ in pairs(zcg.crafts) do
+	for _, name in ipairs(zcg.itemlist) do
 		if s < page*npp then s = s+1 else
 			if i >= npp then break end
 			formspec = formspec .. "item_image_button["..(i%8)..","..(math.floor(i/8)+3.5)..";1,1;"..name..";zcg:"..name..";]"
@@ -121,7 +125,7 @@ zcg.formspec = function(pn)
 	if i >= npp then
 		formspec = formspec .. "button[1,7;1,.5;zcg_page:"..(page+1)..";>>]"
 	end
-	formspec = formspec .. "label[2,6.85;Page "..(page+1).."]" -- The Y is approximatively the good one to have it centered vertically...
+	formspec = formspec .. "label[2,6.85;Page "..(page+1).."/"..(math.floor(#zcg.itemlist/npp+1)).."]" -- The Y is approximatively the good one to have it centered vertically...
 	return formspec
 end
 
