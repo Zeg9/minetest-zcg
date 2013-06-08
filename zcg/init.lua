@@ -143,12 +143,16 @@ zcg.formspec = function(pn)
 end
 
 minetest.register_on_joinplayer(function(player)
-	inventory_plus.register_button(player,"zcg_page:0","Craft guide")
+	inventory_plus.register_button(player,"zcg","Craft guide")
 end)
 
 minetest.register_on_player_receive_fields(function(player,formname,fields)
 	pn = player:get_player_name();
 	if zcg.users[pn] == nil then zcg.users[pn] = {current_item = "", alt = 1, page = 0} end
+	if fields.zcg then
+		inventory_plus.set_inventory_formspec(player, zcg.formspec(pn))
+		return
+	end
 	for k, v in pairs(fields) do
 		if (k:sub(0,4)=="zcg:") then
 			zcg.users[pn].current_item = k:sub(5)
