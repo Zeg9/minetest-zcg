@@ -12,6 +12,7 @@ zcg.items_in_group = function(group)
 	local items = {}
 	local ok = true
 	for name, item in pairs(minetest.registered_items) do
+		-- the node should be in all groups
 		ok = true
 		for _, g in ipairs(group:split(',')) do
 			if not item.groups[g] then
@@ -115,10 +116,17 @@ zcg.formspec = function(pn)
 			end
 			local c = zcg.crafts[current_item][alt]
 			if c then
+				local x = 3
+				local y = 0
 				for i, item in pairs(c.items) do
-					formspec = formspec .. "item_image_button["..((i-1)%c.width+3)..","..(math.floor((i-1)/c.width))..";1,1;"..item..";zcg:"..item..";]"
+					formspec = formspec .. "item_image_button["..((i-1)%c.width+x)..","..(math.floor((i-1)/c.width+y))..";1,1;"..item..";zcg:"..item..";]"
 				end
-				formspec = formspec .. "label[0,2;Method: "..c.type.."]"
+				if c.type == "normal" or c.type == "cooking" then
+					formspec = formspec .. "image[6,2;1,1;zcg_method_"..c.type..".png]"
+				else -- we don't have an image for other types of crafting
+					formspec = formspec .. "label[0,2;Method: "..c.type.."]"
+				end
+				formspec = formspec .. "image[6,1;1,1;zcg_craft_arrow.png]"
 				formspec = formspec .. "item_image_button[7,1;1,1;"..zcg.users[pn].current_item..";;]"
 			end
 		end
