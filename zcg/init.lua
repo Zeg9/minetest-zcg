@@ -10,12 +10,15 @@ zcg.itemlist = {}
 
 zcg.items_in_group = function(group)
 	local items = {}
+	local ok = true
 	for name, item in pairs(minetest.registered_items) do
+		ok = true
 		for _, g in ipairs(group:split(',')) do
-			if item.groups[g] then
-				table.insert(items,name)
+			if not item.groups[g] then
+				ok = false
 			end
 		end
+		if ok then table.insert(items,name) end
 	end
 	return items
 end
