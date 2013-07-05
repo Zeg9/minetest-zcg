@@ -102,6 +102,16 @@ zcg.formspec = function(pn)
 	current_item = zcg.users[pn].current_item
 	local formspec = "size[8,7.5]"
 	.. "button[0,0;2,.5;main;Back]"
+	if zcg.users[pn].history.index > 1 then
+		formspec = formspec .. "image_button[0,1;1,1;zcg_previous.png;zcg_previous;]"
+	else
+		formspec = formspec .. "image[0,1;1,1;zcg_previous_inactive.png]"
+	end
+	if zcg.users[pn].history.index < #zcg.users[pn].history.list then
+		formspec = formspec .. "image_button[1,1;1,1;zcg_next.png;zcg_next;]"
+	else
+		formspec = formspec .. "image[1,1;1,1;zcg_next_inactive.png]"
+	end
 	-- Show craft recipe
 	if current_item ~= "" then
 		if zcg.crafts[current_item] then
@@ -159,15 +169,32 @@ end)
 
 minetest.register_on_player_receive_fields(function(player,formname,fields)
 	pn = player:get_player_name();
-	if zcg.users[pn] == nil then zcg.users[pn] = {current_item = "", alt = 1, page = 0} end
+	if zcg.users[pn] == nil then zcg.users[pn] = {current_item = "", alt = 1, page = 0, history={index=0,list={}}} end
 	if fields.zcg then
 		inventory_plus.set_inventory_formspec(player, zcg.formspec(pn))
 		return
+	elseif fields.zcg_previous then
+		if zcg.users[pn].history.index > 1 then
+			zcg.users[pn].history.index = zcg.users[pn].history.index - 1
+			zcg.users[pn].current_item = zcg.users[pn].history.list[zcg.users[pn].history.index]
+			inventory_plus.set_inventory_formspec(player,zcg.formspec(pn))
+		end
+	elseif fields.zcg_next then
+		if zcg.users[pn].history.index < #zcg.users[pn].history.list then
+			zcg.users[pn].history.index = zcg.users[pn].history.index + 1
+			zcg.users[pn].current_item = zcg.users[pn].history.list[zcg.users[pn].history.index]
+			inventory_plus.set_inventory_formspec(player,zcg.formspec(pn))
+		end
 	end
 	for k, v in pairs(fields) do
 		if (k:sub(0,4)=="zcg:") then
-			zcg.users[pn].current_item = k:sub(5)
-			inventory_plus.set_inventory_formspec(player,zcg.formspec(pn))
+			local ni = k:sub(5)
+			if zcg.crafts[ni] then
+				zcg.users[pn].current_item = ni
+				table.insert(zcg.users[pn].history.list, ni)
+				zcg.users[pn].history.index = #zcg.users[pn].history.list
+				inventory_plus.set_inventory_formspec(player,zcg.formspec(pn))
+			end
 		elseif (k:sub(0,9)=="zcg_page:") then
 			zcg.users[pn].page = tonumber(k:sub(10))
 			inventory_plus.set_inventory_formspec(player,zcg.formspec(pn))
